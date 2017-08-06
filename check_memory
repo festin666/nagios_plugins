@@ -1,0 +1,29 @@
+#!/bin/sh
+
+pagesize=4096 # TODO read from sysctl
+b2mb=$((1024*1024))
+exit_status=0
+
+m_total_p=`sysctl -n vm.stats.vm.v_page_count`
+m_cache_p=`sysctl -n vm.stats.vm.v_cache_count`
+m_active_p=`sysctl -n vm.stats.vm.v_active_count`
+m_inactive_p=`sysctl -n vm.stats.vm.v_inactive_count`
+m_wire_p=`sysctl -n vm.stats.vm.v_wire_count`
+m_free_p=`sysctl -n vm.stats.vm.v_free_count`
+
+# Next calculation needed just for checking we're on the right way
+m_total_calc_p=$(($m_cache_p+$m_active_p+$m_inactive_p+$m_wire_p+$m_free_p))
+
+m_total_calc_mb=$(($m_total_calc_p*$pagesize/$b2mb))
+m_used_calc_p=$(($m_active_p+$m_wire_p))
+m_used_calc_mb=$(($m_used_calc_p*$pagesize/$b2mb))
+m_total_mb=$(($m_total_p*$pagesize/$b2mb))
+m_cache_mb=$(($m_cache_p*$pagesize/$b2mb))
+m_active_mb=$(($m_active_p*$pagesize/$b2mb))
+m_inactive_mb=$(($m_inactive_p*$pagesize/$b2mb))
+m_wire_mb=$(($m_wire_p*$pagesize/$b2mb))
+m_free_mb=$(($m_free_p*$pagesize/$b2mb))
+
+m_used_percent=`echo "scale=2;$m_used_calc_p/$m_total_calc_p*100"|bc`
+echo "OK: used ${m_used_percent}%"
+exit $exit_status
